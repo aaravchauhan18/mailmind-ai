@@ -1,0 +1,1 @@
+ALTER TABLE emails ADD COLUMN IF NOT EXISTS html_body TEXT;

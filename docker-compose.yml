@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # 5432 is commonly occupied by a locally installed PostgreSQL instance.
+    ports: ["5433:5432"]
+    volumes: ["mailmind-db:/var/lib/postgresql/data"]
+  app:
+    build: ./backend
+    env_file: .env
+    environment:
+      # The container reaches PostgreSQL through the Compose service name.
+      DATABASE_URL: jdbc:postgresql://postgres:5432/mailmind
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports: ["8080:8080"]
+    depends_on: [postgres]
+volumes: { mailmind-db: {} }

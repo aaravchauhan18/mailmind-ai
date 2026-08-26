@@ -1,0 +1,27 @@
+spring:
+  config:
+    # Loads the repository-root .env during local development. Deployment
+    # platforms supply the same names as real environment variables.
+    import: optional:file:../.env[.properties]
+  application.name: mailmind-ai
+  threads.virtual.enabled: true
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate.ddl-auto: validate
+    open-in-view: false
+  quartz:
+    job-store-type: jdbc
+    jdbc.initialize-schema: always
+    properties.org.quartz.threadPool.threadCount: 5
+app:
+  ai:
+    base-url: ${OPENROUTER_BASE_URL}
+    api-key: ${OPENROUTER_API_KEY}
+    model: ${OPENROUTER_MODEL}
+  cors-origin: ${CORS_ORIGIN}
+  frontend-url: ${FRONTEND_URL}
+  digest-cron: ${DIGEST_CRON}
+management.endpoints.web.exposure.include: health,info

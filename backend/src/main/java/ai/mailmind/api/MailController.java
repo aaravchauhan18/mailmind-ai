@@ -1,0 +1,28 @@
+package ai.mailmind.api;
+import ai.mailmind.api.ApiModels.*; import ai.mailmind.domain.User; import ai.mailmind.service.*; import jakarta.validation.Valid; import org.springframework.beans.factory.ObjectProvider; import org.springframework.http.*; import org.springframework.security.core.context.SecurityContextHolder; import org.springframework.web.bind.annotation.*; import java.util.*;
+@RestController @RequestMapping("/api") public class MailController {
+ private final IdentityService identities; private final MailService mail; private final ObjectProvider<GmailSyncService> gmail;
+ public MailController(IdentityService i,MailService m,ObjectProvider<GmailSyncService> g){identities=i;mail=m;gmail=g;}
+ private User user(String email){return identities.user(SecurityContextHolder.getContext().getAuthentication());}
+ @GetMapping("/me") public Profile me(){User u=user("");String name=u.displayName==null?u.email:u.displayName;String initials=name.replaceAll("[^A-Za-z]","").substring(0,Math.min(2,name.replaceAll("[^A-Za-z]","").length())).toUpperCase();return new Profile(u.email,name,initials,u.email.endsWith("mailmind.local")?"demo":"google");}
+ @PostMapping("/emails") @ResponseStatus(HttpStatus.CREATED) public EmailView ingest(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@Valid @RequestBody ImportEmail body){return mail.ingest(user(user),body);}
+ @GetMapping("/emails") public List<EmailView> inbox(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user){return mail.inbox(user(user));}
+ @GetMapping("/emails/{id}/body") public Map<String,String> body(@PathVariable UUID id){User u=user("");Map<String,String> result=new HashMap<>();result.put("body",mail.body(u,id));result.put("html",Optional.ofNullable(mail.html(u,id)).orElse(""));return result;}
+ @GetMapping("/emails/{id}/attachments") public List<IncomingAttachment> attachments(@PathVariable UUID id){User u=user("");return gmailService().attachments(SecurityContextHolder.getContext().getAuthentication(),mail.email(u,id));}
+ @GetMapping("/emails/{id}/attachments/{attachmentId}") public ResponseEntity<byte[]> attachment(@PathVariable UUID id,@PathVariable String attachmentId){User u=user("");var file=gmailService().attachment(SecurityContextHolder.getContext().getAuthentication(),mail.email(u,id),attachmentId);MediaType type;try{type=MediaType.parseMediaType(file.contentType());}catch(Exception ignored){type=MediaType.APPLICATION_OCTET_STREAM;}return ResponseEntity.ok().contentType(type).header(HttpHeaders.CONTENT_DISPOSITION,ContentDisposition.attachment().filename(file.name()).build().toString()).body(file.bytes());}
+ @PostMapping("/emails/{id}/analyze") public Analysis analyze(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@PathVariable UUID id){return mail.analyze(user(user),id);}
+ @PostMapping("/emails/{id}/reply") public Reply reply(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@PathVariable UUID id,@Valid @RequestBody ReplyRequest body){return mail.reply(user(user),id,body.instruction());}
+ @PostMapping("/emails/{id}/gmail-draft") public GmailWriteResult gmailDraft(@PathVariable UUID id,@Valid @RequestBody GmailComposeRequest body){User u=user("");return gmailService().createReplyDraft(SecurityContextHolder.getContext().getAuthentication(),mail.email(u,id),body);}
+ @PostMapping("/emails/{id}/gmail-send") public GmailWriteResult gmailSend(@PathVariable UUID id,@Valid @RequestBody GmailComposeRequest body){User u=user("");return gmailService().sendReply(SecurityContextHolder.getContext().getAuthentication(),mail.email(u,id),body);}
+ @PostMapping("/emails/{id}/ai-summary") public EmailView aiSummary(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@PathVariable UUID id){return mail.aiSummary(user(user),id);}
+ @GetMapping("/threads/{threadId}/summary") public Map<String,String> thread(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@PathVariable String threadId){return Map.of("summary",mail.thread(user(user),threadId));}
+ @GetMapping("/search") public SearchResult search(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@RequestParam String q){return mail.search(user(user),q);}
+ @GetMapping("/digest") public Digest digest(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user){return mail.digest(user(user));}
+ @GetMapping("/tasks") public List<TaskView> tasks(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user){return mail.tasks(user(user));}
+ @GetMapping("/tasks/closed") public List<TaskView> closedTasks(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user){return mail.closedTasks(user(user));}
+ @PostMapping("/tasks/generate") public List<TaskView> generateTasks(){return mail.generateTasks(user(""));}
+ @PatchMapping("/tasks/{id}/complete") @ResponseStatus(HttpStatus.NO_CONTENT) public void complete(@RequestHeader(value="X-User-Email",defaultValue="demo@mailmind.local") String user,@PathVariable UUID id){mail.complete(user(user),id);}
+ @DeleteMapping("/tasks/{id}") @ResponseStatus(HttpStatus.NO_CONTENT) public void deleteClosed(@PathVariable UUID id){mail.deleteClosed(user(""),id);}
+ @DeleteMapping("/tasks/closed") @ResponseStatus(HttpStatus.NO_CONTENT) public void deleteAllClosed(){mail.deleteAllClosed(user(""));}
+ private GmailSyncService gmailService(){var service=gmail.getIfAvailable();if(service==null)throw new IllegalStateException("Gmail write access is available only with the google profile enabled.");return service;}
+}
