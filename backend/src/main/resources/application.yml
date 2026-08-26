@@ -16,6 +16,8 @@ spring:
     job-store-type: jdbc
     jdbc.initialize-schema: always
     properties.org.quartz.threadPool.threadCount: 5
+server:
+  port: ${PORT}
 app:
   ai:
     base-url: ${OPENROUTER_BASE_URL}
