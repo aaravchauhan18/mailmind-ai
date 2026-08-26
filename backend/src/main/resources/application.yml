@@ -18,6 +18,7 @@ spring:
     properties.org.quartz.threadPool.threadCount: 5
 server:
   port: ${PORT}
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
   servlet:
     session:
       cookie:
