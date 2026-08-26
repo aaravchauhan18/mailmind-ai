@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, apiUrl, Attachment, Digest, Email, IncomingAttachment, Profile, Task } from "./api";
 const c = { URGENT: "red", IMPORTANT: "gold", FYI: "green" } as const;
 export default function App() {
+  const publicPage = window.location.pathname.replace(/\/+$/, "") || "/";
   const editor = useRef<HTMLDivElement>(null);
   const linkSelection = useRef<{ start: number; end: number } | null>(null);
   const [p, setP] = useState<Profile>(),
@@ -70,7 +71,10 @@ export default function App() {
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [s]);
-  if (!p)
+  if (publicPage === "/privacy" || publicPage === "/terms")
+    return <PublicPage page={publicPage === "/privacy" ? "privacy" : "terms"} />;
+  if (!p) return <PublicPage page="home" />;
+  if (false)
     return (
       <div className="login">
         <div>
@@ -82,6 +86,11 @@ export default function App() {
             Bring Gmail into one focused workspace for priority sorting, AI
             summaries, action items, and thoughtful replies.
           </p>
+          <ul className="public-features">
+            <li>Organize inbox messages by urgency and importance.</li>
+            <li>Generate summaries, reply drafts, and linked action items.</li>
+            <li>Create Gmail drafts and send replies only when you choose.</li>
+          </ul>
           <button
             onClick={() =>
               (location.href =
@@ -91,6 +100,7 @@ export default function App() {
             <span className="google-mark">G</span> Continue with Google
           </button>
           <small>Secure Gmail access to read, draft, and send email. You can sign out anytime.</small>
+          <p className="public-links"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></p>
         </div>
       </div>
     );
@@ -592,6 +602,30 @@ function rangeAtTextOffsets(root: HTMLElement, saved: { start: number; end: numb
   range.collapse(false);
   return range;
 }
+function PublicPage({ page }: { page: "home" | "privacy" | "terms" }) {
+  const login = () => {
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/oauth2/authorization/google`;
+  };
+  const content = page === "privacy" ? <>
+    <h1>Privacy Policy</h1>
+    <p>Last updated: 27 August 2026</p>
+    <h2>What MailMind AI accesses</h2><p>When you choose to connect Google, MailMind AI accesses your basic Google profile and Gmail messages needed to display your inbox, create summaries and reply drafts, identify action items, and create drafts or send replies only when you direct it to do so.</p>
+    <h2>How information is used</h2><p>MailMind AI uses your email content solely to provide the features you request. When you generate a summary, reply, or task list, relevant email content is sent to the configured AI provider to produce that result.</p>
+    <h2>Storage and sharing</h2><p>MailMind AI stores account details and synced email data needed to operate the service. We do not sell Google user data. We do not use Google user data for advertising. We share it only with service providers necessary to run MailMind AI, including the AI provider when you request an AI feature.</p>
+    <h2>Your choices</h2><p>You can sign out at any time. You can stop using the service and request deletion of your stored MailMind AI account data by contacting the support email shown on the Google consent screen.</p>
+  </> : <>
+    <h1>Terms of Service</h1>
+    <p>Last updated: 27 August 2026</p>
+    <h2>Using MailMind AI</h2><p>MailMind AI helps you organize Gmail, generate summaries and drafts, and manage action items. You remain responsible for reviewing every generated result and for every email that is drafted or sent from your Gmail account.</p>
+    <h2>Your account</h2><p>Use MailMind AI only with Google accounts that you are authorized to access. Keep your account secure and promptly sign out on shared devices.</p>
+    <h2>Service availability</h2><p>MailMind AI is provided as available. AI-generated content can be inaccurate or incomplete, so it should not be treated as legal, financial, medical, or professional advice.</p>
+    <h2>Contact</h2><p>For questions about these terms, contact the support email listed on the MailMind AI Google consent screen.</p>
+  </>;
+  if (page !== "home") return <div className="legal-page"><PublicNav onLogin={login} /> <article className="legal-content">{content}</article></div>;
+  return <div className="public-page"><PublicNav onLogin={login} /><section className="public-hero"><div><p className="eyebrow">MAILMIND AI</p><h1>Your Gmail, thoughtfully organized.</h1><p className="lead">MailMind AI brings priority inbox management, AI summaries, useful action items, and reviewable Gmail replies into one focused workspace.</p><button className="public-login" onClick={login}><span className="google-mark">G</span> Continue with Google</button><p className="assurance">You choose what MailMind can do. Review AI output before sending any email.</p></div><div className="public-card"><b>Built for focus</b><span>Prioritize important messages</span><span>Generate concise email summaries</span><span>Turn emails into linked tasks</span><span>Draft, edit, and send replies through Gmail</span></div></section><section className="public-disclosure"><h2>How MailMind uses Google data</h2><p>MailMind accesses Gmail messages only to provide the inbox, AI summary, task, draft, and send features you request. It does not sell Google user data or use it for advertising. Read our <a href="/privacy">Privacy Policy</a> for details.</p></section><PublicFooter /></div>;
+}
+function PublicNav({ onLogin }: { onLogin: () => void }) { return <header className="public-nav"><a className="public-brand" href="/">MailMind <i>AI</i></a><nav><a href="/privacy">Privacy</a><a href="/terms">Terms</a><button onClick={onLogin}>Sign in with Google</button></nav></header>; }
+function PublicFooter() { return <footer className="public-footer"><span>© 2026 MailMind AI</span><span><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></span></footer>; }
 function greet() {
   const h = Number(
     new Intl.DateTimeFormat("en-IN", {
