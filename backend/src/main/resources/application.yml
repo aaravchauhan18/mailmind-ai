@@ -18,6 +18,11 @@ spring:
     properties.org.quartz.threadPool.threadCount: 5
 server:
   port: ${PORT}
+  servlet:
+    session:
+      cookie:
+        same-site: ${SESSION_COOKIE_SAME_SITE}
+        secure: ${SESSION_COOKIE_SECURE}
 app:
   ai:
     base-url: ${OPENROUTER_BASE_URL}

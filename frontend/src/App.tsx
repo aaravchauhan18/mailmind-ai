@@ -190,7 +190,7 @@ export default function App() {
   const downloadIncomingAttachment = async (file: IncomingAttachment) => {
     if (!s) return;
     try {
-      const response = await fetch(apiUrl(`/api/emails/${s.id}/attachments/${encodeURIComponent(file.id)}`));
+      const response = await fetch(apiUrl(`/api/emails/${s.id}/attachments/${encodeURIComponent(file.id)}`), { credentials: "include" });
       if (!response.ok) {
         const detail = await response.text();
         throw new Error(detail ? `Download failed: ${detail}` : `Download failed (HTTP ${response.status}).`);

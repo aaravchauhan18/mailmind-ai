@@ -13,7 +13,7 @@ const apiBase = configuredApiBase.replace(/\/$/, "");
 export const apiUrl = (path: string) => `${apiBase}${path}`;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(apiUrl(path), { ...init, headers: { ...headers, ...init?.headers } });
+  const response = await fetch(apiUrl(path), { ...init, credentials: "include", headers: { ...headers, ...init?.headers } });
   if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Request failed");
   return response.status === 204 ? undefined as T : response.json();
 }
@@ -21,7 +21,7 @@ const compose = (body: string, attachments: Attachment[]) => ({ method: "POST", 
 
 export const api = {
   me: () => request<Profile>("/api/me"), sync: () => request<{ imported: number }>("/api/gmail/sync", { method: "POST" }),
-  logout: () => fetch(apiUrl("/api/logout"), { method: "POST" }), emails: () => request<Email[]>("/api/emails"),
+  logout: () => fetch(apiUrl("/api/logout"), { method: "POST", credentials: "include" }), emails: () => request<Email[]>("/api/emails"),
   body: (id: string) => request<{ body: string; html: string }>(`/api/emails/${id}/body`), incomingAttachments: (id: string) => request<IncomingAttachment[]>(`/api/emails/${id}/attachments`),
   digest: () => request<Digest>("/api/digest"), tasks: () => request<Task[]>("/api/tasks"), closedTasks: () => request<Task[]>("/api/tasks/closed"),
   generateTasks: () => request<Task[]>("/api/tasks/generate", { method: "POST" }), summary: (id: string) => request<Email>(`/api/emails/${id}/ai-summary`, { method: "POST" }),
