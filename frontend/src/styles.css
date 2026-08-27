@@ -86,14 +86,15 @@ main{display:block;padding-left:240px}aside{position:fixed;top:0;left:0;width:24
   .attachment{max-width:100%}
   .link-popover{left:8px;width:calc(100% - 16px)}
   .link-popover>div{grid-template-columns:20px minmax(0,1fr) auto}
-  .public-nav{padding:18px 16px}
-  .public-nav nav{gap:8px}
-  .public-nav nav a{display:inline;font-size:11px}
-  .public-nav nav button{padding:8px 9px;font-size:11px}
+  .public-nav{padding:18px 16px;flex-wrap:wrap}
+  .public-nav nav{width:100%;justify-content:space-between;gap:10px}
+  .public-nav nav a{display:inline;font-size:12px}
+  .public-nav nav button{margin-left:auto;padding:9px 11px;font-size:12px}
   .public-hero{padding:45px 22px;gap:28px}
   .public-hero h1{font-size:clamp(38px,13vw,52px)}
   .lead{font-size:16px}
   .public-footer{padding:22px 18px}
+  .public-disclosure{width:calc(100% - 36px);max-width:1068px;margin:0 auto 45px}
 }
 
 @media (max-width:380px){
@@ -103,5 +104,7 @@ main{display:block;padding-left:240px}aside{position:fixed;top:0;left:0;width:24
   .brief{grid-column:1 / -1}
   .card{padding:11px}
   .drawer{padding-left:12px;padding-right:12px}
-  .public-nav nav a{display:none}
+  .public-nav nav{gap:7px}
+  .public-nav nav a{display:inline;font-size:11px}
+  .public-nav nav button{padding:8px 9px;font-size:11px}
 }
